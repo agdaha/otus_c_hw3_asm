@@ -1,1 +1,5 @@
 asm-prog
+c-prog
+c_ref-prog
+asm_ref-prog
+*.o

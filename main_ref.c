@@ -1,7 +1,7 @@
 // Type your code here, or load an example.
 #include <stdio.h>
 #include <stdlib.h>
-//#include <string.h>
+#include <string.h>
 
 
 long int data[]={4, 8, 15, 16, 23, 42};
@@ -18,7 +18,7 @@ void print_int(long int x){
     fflush(0); // не совсем понял для чего это надо
 }
 
-int p( long int x){
+int is_odd( long int x){
     return x & 1;
 }
 
@@ -32,21 +32,29 @@ struct node *add_element(struct node* n, long int v){
     return ptr;
 }
 
-void m(struct node* list, void (*func)(long int)){
-    if (!list) {
-        return;
+void map(struct node* list, void (*func)(long int)){
+    while(list){
+        func(list->value);
+        list = list->next;
     }
-    func(list->value);
-    m(list->next, func);
 }
 
-struct node *f(struct node* list,struct node* new_list, int (*func)(long int)){
-    if (!list) return new_list;
-    
-    if (func(list->value)) {
-        return f(list->next, add_element(new_list, list->value ), func);
-    } else {
-        return f(list->next, new_list, func);
+struct node *filter(struct node* list,int (*func)(long int)){
+    struct node *new_list = NULL;
+    while(list){
+        if (func(list->value)){
+            new_list=add_element(new_list,list->value);
+        }
+        list = list->next;
+    }
+    return new_list;
+}
+
+void clear(struct node* list){
+    while(list){
+        struct node *ptr=list;
+        list = list->next;
+        free(ptr);
     }
 }
 
@@ -55,13 +63,15 @@ int main(){
     for (size_t i = data_length; i > 0; i--) {
         list = add_element(list, data[i-1]);
     }
-    m(list,print_int);
+    map(list,print_int);
+    puts(empty_str);
+    
+    struct node* new_list = filter(list, is_odd);
+    map(new_list, print_int);
     puts(empty_str);
 
-    struct node* new_list = f(list, NULL,p);
-    m(new_list, print_int);
-
-    puts(empty_str);
+    clear(list);
+    clear(new_list);
 
     return 0;
 }

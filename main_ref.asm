@@ -27,8 +27,8 @@ print_int:
     pop rbp
     ret
 
-;;; p proc
-p:
+;;; is_odd proc
+is_odd:
     mov rax, rdi
     and rax, 1
     ret
@@ -58,80 +58,101 @@ add_element:
     pop rbp
     ret
 
-;;; m proc
-m:
+;;; map proc
+map:    
     push rbp
     mov rbp, rsp
     sub rsp, 16
 
     test rdi, rdi
-    jz outm
-
+    jz .out
+    
     push rbp
     push rbx
-
+.loop:
     mov rbx, rdi
     mov rbp, rsi
 
     mov rdi, [rdi]
     call rsi
-
-    mov rdi, [rbx + 8]
+    
     mov rsi, rbp
-    call m
+    mov rdi, [rbx + 8]
+    test rdi, rdi
+    jnz .loop
 
     pop rbx
     pop rbp
-
-outm:
+.out:
     mov rsp, rbp
     pop rbp
     ret
 
-;;; f proc
-f:
-    mov rax, rsi
 
+;;; filter proc
+filter:
+    push rbp
+    mov rbp, rsp
     test rdi, rdi
-    jz outf
+    jz .out
 
     push rbx
     push r12
     push r13
-
-    mov rbx, rdi
-    mov r12, rsi
-    mov r13, rdx
-
+    mov r12, 0
+.loop: 
+    mov rbx, rdi ; source_ptr
+    mov r13, rdx ; is_odd
     mov rdi, [rdi]
     call rdx
     test rax, rax
-    jz z
+    jz .next
 
     mov rdi, [rbx]
     mov rsi, r12
     call add_element
-    mov rsi, rax
-    jmp ff
-
-z:
-    mov rsi, r12
-
-ff:
+    mov r12, rax
+.next: 
     mov rdi, [rbx + 8]
     mov rdx, r13
-    call f
+    test rdi, rdi
+    jnz .loop 
 
+    mov rax, r12
     pop r13
     pop r12
     pop rbx
+.out: 
+    pop rbp
+    ret
 
-outf:
+;;; clear proc
+clear:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    
+    test rdi, rdi
+    jz .out
+    
+    push rbx
+.loop:
+    mov rbx, [rdi + 8]  
+    call free            
+    mov rdi, rbx         
+    test rdi, rdi
+    jnz .loop
+    pop rbx
+.out:
+    mov rsp, rbp
+    pop rbp
     ret
 
 ;;; main proc
 main:
     push rbx
+    push r12
+    push r13
 
     xor rax, rax
     mov rbx, data_length
@@ -143,26 +164,33 @@ adding_loop:
     jnz adding_loop
 
     mov rbx, rax
-
+    mov r12, rax
     mov rdi, rax
     mov rsi, print_int
-    call m
+    call map
 
     mov rdi, empty_str
     call puts
 
-    mov rdx, p
-    xor rsi, rsi
+    mov rdx, is_odd
     mov rdi, rbx
-    call f
+    call filter
 
+    mov r13, rax
     mov rdi, rax
     mov rsi, print_int
-    call m
+    call map
 
     mov rdi, empty_str
     call puts
 
+    mov rdi, r12
+    call clear
+    mov rdi, r13
+    call clear
+
+    pop r13
+    pop r12
     pop rbx
 
     xor rax, rax
